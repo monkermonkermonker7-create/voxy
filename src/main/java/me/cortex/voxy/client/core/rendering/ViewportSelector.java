@@ -1,21 +1,15 @@
 package me.cortex.voxy.client.core.rendering;
 
 import me.cortex.voxy.client.core.util.IrisUtil;
-import net.fabricmc.loader.api.FabricLoader;
-import org.vivecraft.api.client.VRRenderingAPI;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static org.vivecraft.api.client.data.RenderPass.VANILLA;
-
-public class ViewportSelector <T extends Viewport<?>> {
-    public static final boolean VIVECRAFT_INSTALLED = FabricLoader.getInstance().isModLoaded("vivecraft");
-
+public class ViewportSelector<T extends Viewport<?>> {
     private final Supplier<T> creator;
     private final T defaultViewport;
-    private final Map<Object, T> extraViewports = new HashMap<>();//TODO should maybe be a weak hashmap with value cleanup queue thing?
+    private final Map<Object, T> extraViewports = new HashMap<>();
 
     public ViewportSelector(Supplier<T> viewportCreator) {
         this.creator = viewportCreator;
@@ -23,23 +17,13 @@ public class ViewportSelector <T extends Viewport<?>> {
     }
 
     private T getOrCreate(Object holder) {
-        return this.extraViewports.computeIfAbsent(holder, a->this.creator.get());
-    }
-
-    private T getVivecraftViewport() {
-        var pass = VRRenderingAPI.instance().getCurrentRenderPass();
-        if (pass == null || pass == VANILLA) {
-            return null;
-        }
-        return this.getOrCreate(pass);
+        return this.extraViewports.computeIfAbsent(holder, a -> this.creator.get());
     }
 
     private static final Object IRIS_SHADOW_OBJECT = new Object();
+
     public T getViewport() {
         T viewport = null;
-        if (viewport == null && VIVECRAFT_INSTALLED) {
-            viewport = getVivecraftViewport();
-        }
 
         if (viewport == null && IrisUtil.irisShadowActive()) {
             viewport = this.getOrCreate(IRIS_SHADOW_OBJECT);
@@ -48,6 +32,7 @@ public class ViewportSelector <T extends Viewport<?>> {
         if (viewport == null) {
             viewport = this.defaultViewport;
         }
+
         return viewport;
     }
 
